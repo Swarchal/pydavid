@@ -4,9 +4,12 @@ module docstring
 http://david.abcc.ncifcrf.gov/api.jsp?type=xxxxx&ids=XXXXX,XXXXX,XXXXXX,&tool=xxxx&annot=xxxxx,xxxxxx,xxxxx,
 """
 
+import os
 import valid_values
 import pandas as pd
+import bs4 as BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 
 def get_html(id_type, ids, annot, tool="chartReport"):
@@ -33,6 +36,12 @@ def get_html(id_type, ids, annot, tool="chartReport"):
     html dump
     """
     _check_arguments(id_type, tool, annot)
+    # use firefox in headless mode to parse webpage
+    # can't use requests.get as there's a load of javascript that needs
+    # to run before the page is actually loaded
+    os.environ["MOZ_HEADLESS"] = "1"
+    binary = FirefoxBinary("/usr/bin/firefox")
+    driver = webdriver.Firefox(firefox_binary=binary)
     # if passed a list, convert to a string separated by commas
     if isinstance(ids, list):
         ids = ",".join(ids)
@@ -42,12 +51,9 @@ def get_html(id_type, ids, annot, tool="chartReport"):
     url = "{prefix}type={id_type}&ids={ids},&tool={tool}&annot={annot}".format(
             prefix = url_prefix, id_type = id_type, ids=ids, tool=tool,
             annot=annot)
-    # FIXME returning a pretty sparse html page
     print("Fetching url: \n {}".format(url))
-    driver = webdriver.PhantomJS()
     driver.get(url)
-    # FIXME need to get chartReport.jsp from this page
-    return driver
+    return driver.page_source
 
 
 def _check_arguments(id_type, tool, annot):
@@ -68,6 +74,25 @@ def _check_arguments(id_type, tool, annot):
             raise ValueError("Invalid annot: {}".format(incorrect))
 
 
+def get_data_from_html(html):
+    """docstring"""
+    david_url_prefix = "https://david.ncifcrf.gov"
+    soup = BeautifulSoup.BeautifulSoup(html)
+    for link in soup.findAll("a"):
+        tmp_url = link.get("href")
+        if tmp_url.startswith("data/download/chart_"):
+            url_suffix = tmp_url
+            break
+    chart_url = os.path.join(david_url_prefix, url_suffix)
+    return pd.read_table(chart_url)
+
+
+# TODO: proper arguments
+def get_table(*args, **kwargs):
+    """docstring"""
+    html = get_html(*args, **kwargs)
+    return get_data_from_html(html)
+
 
 # DEBUGGING
 # TODO: remove this once done
@@ -78,9 +103,12 @@ if __name__ == "__main__":
     tool = "chartReport"
     annot = ["GOTERM_BP_FAT", "GOTERM_MF_FAT", "INTERPRO"]
 
-    result = get_html(
+    result = get_table(
         id_type=id_type,
         ids=ids,
         tool=tool,
         annot=annot)
+
+    print(result)
+
 
