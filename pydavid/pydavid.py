@@ -93,22 +93,3 @@ def get_table(*args, **kwargs):
     html = get_html(*args, **kwargs)
     return get_data_from_html(html)
 
-
-# DEBUGGING
-# TODO: remove this once done
-if __name__ == "__main__":
-
-    id_type = "ENTREZ_GENE_ID"
-    ids = ["2919", "6347", "6348", "6364"]
-    tool = "chartReport"
-    annot = ["GOTERM_BP_FAT", "GOTERM_MF_FAT", "INTERPRO"]
-
-    result = get_table(
-        id_type=id_type,
-        ids=ids,
-        tool=tool,
-        annot=annot)
-
-    print(result)
-
-
