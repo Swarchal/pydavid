@@ -5,6 +5,10 @@ Simple python package to get pandas DataFrames from DAVID queries.
 
 -------------
 
+More info and limitations of the DAVID API see
+[here](https://david.ncifcrf.gov/content.jsp?file=DAVID_API.html).
+
+
 ## Example
 
 ```python
