@@ -7,6 +7,8 @@ setup(
     description="Get dataframes from DAVID queries",
     author="Scott Warchal",
     license="MIT",
+    packages=["pydavid"],
     install_requires=["selenium", "bs4", "pandas"],
+    zip_safe=False,
     tests_require=["pytest"]
     )
